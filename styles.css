@@ -168,10 +168,15 @@ input[type="search"] { flex: 2 1 180px; min-width: 0; }
 
 /* ---------- 5. Collection page: chapters, locations and items ---------- */
 .stage { margin-top: 26px; }
+.stage > summary { cursor: pointer; list-style: none; }
+.stage > summary::-webkit-details-marker { display: none; }
 .stage h2 {
-  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  display: flex; align-items: baseline; gap: 10px;
   padding-bottom: 6px; border-bottom: 2px solid var(--ink); font-size: 1.3rem;
 }
+.stage h2 .chev { align-self: center; }
+.stage[open] > summary .chev { transform: rotate(45deg); }
+.s-name { flex: 1; min-width: 0; }
 .stage-title { display: block; font-size: .95rem; font-weight: 400; font-style: italic; color: var(--muted); }
 .stage h2 small { font: 500 .9rem var(--f-body); color: var(--muted); font-variant-numeric: tabular-nums; }
 .stage h2 small.done { color: var(--gold); font-weight: 700; }

@@ -35,7 +35,7 @@ On Samsung Internet, tap **☰**, then **Add page to**, then **Home screen**.
    - Rebirth: *Treasure*
 3. **Collection:** tap the shard or box next to an item to mark it collected. Tap again to undo.
 
-Items are sorted by **chapter**, then by **location**. Locations start folded so the list isn't overwhelming: tap a location's name to open or close it. Searching, picking a location or turning on **Missable only** opens whatever matches.
+Items are sorted by **chapter**, then by **location**. Tap a chapter's heading to fold it away (handy for chapters you've finished). Locations start folded so the list isn't overwhelming: tap a location's name to open or close it. Searching, picking a location or turning on **Missable only** opens whatever matches.
 
 **Avoiding spoilers:**
 - **I'm up to** (on the game page): set the chapter you've reached. Later chapters stay hidden in every collection for that game.
@@ -84,3 +84,4 @@ When the app is next opened online, **"App updated. Tap to reload."** appears.
 |---|---|
 | v1 | Final Fantasy Resonance: Tablet Shards and Treasure Chests |
 | v1.1 | Final Fantasy VII Rebirth: Treasure, with Weapon / Materia / Item / Gil filters |
+| v1.2 | Chapters can be folded away by tapping their heading |

@@ -215,8 +215,9 @@ function showGame(game) {
 // they reset each time you open a collection.
 let page = null;
 
-// Locations you have opened or closed by hand, so a redraw keeps them that way.
-// Key: "game/collection/stage|location", value: true (open) or false (closed).
+// Chapters and locations you have opened or closed by hand, so a redraw keeps them that way.
+// Key: "game/collection/stage" for a chapter, "game/collection/stage|location" for a location;
+// value: true (open) or false (closed).
 const groupOpen = {};
 
 /** Collection page: the filter bar, then every item sorted by chapter, then location. */
@@ -355,11 +356,15 @@ function drawList() {
     const regions = [];
     all.forEach(function (i) { if (i.region && regions.indexOf(i.region) < 0) regions.push(i.region); });
     const title = (game.stageTitles || {})[stage];
+    const stageKey = game.id + '/' + col.id + '/' + stage;
+    // Chapters start open; tap the heading to fold one away. Filtering opens what matches.
+    const stageOpen = terms.length || page.group || page.view.miss || page.view.types.length ? true : groupOpen[stageKey] !== false;
 
-    html += '<section class="stage"><h2><span>' + esc(stageLabel(game, stage)) +
+    html += '<details class="stage" data-key="' + esc(stageKey) + '"' + (stageOpen ? ' open' : '') + '>' +
+      '<summary><h2><span class="chev" aria-hidden="true"></span><span class="s-name">' + esc(stageLabel(game, stage)) +
       (title ? '<span class="stage-title">' + esc(title) + '</span>' : '') + '</span>' +
       (all.length ? '<small class="' + (stageGot === all.length ? 'done' : '') + '">' + stageGot + ' / ' + all.length + '</small>' : '') +
-      '</h2>';
+      '</h2></summary>';
     if (regions.length) html += '<p class="regions">' + esc(regions.join(' · ')) + '</p>';
     ((col.stageNotes || {})[stage] || []).forEach(function (n) {
       html += '<p class="alert alert-' + esc(n.kind) + '">' + (n.title ? '<b>' + esc(n.title) + ':</b> ' : '') + esc(n.text) + '</p>';
@@ -368,7 +373,7 @@ function drawList() {
     if (!shown.length) {
       // A chapter can have nothing to collect at all (it then just shows its notes).
       if (all.length) html += '<p class="empty">Everything in this ' + esc(game.stageName.toLowerCase()) + ' is collected.</p>';
-      html += '</section>';
+      html += '</details>';
       return;
     }
 
@@ -396,7 +401,7 @@ function drawList() {
       if (note) html += '<p class="g-note">' + esc(note) + '</p>';
       html += '<ul class="items">' + items.map(itemRow).join('') + '</ul></details>';
     });
-    html += '</section>';
+    html += '</details>';
   });
 
   if (!html) html = '<p class="empty">Nothing matches these filters.</p>';
@@ -476,7 +481,7 @@ function drawMilestones(count) {
   box.open = wasOpen;
 }
 
-// Taps on the collection page: ticking items, and remembering opened/closed locations.
+// Taps on the collection page: ticking items, and remembering opened/closed chapters and locations.
 view.addEventListener('click', function (e) {
   if (!page) return;
   const btn = e.target.closest('.mark');
@@ -490,7 +495,7 @@ view.addEventListener('click', function (e) {
     if (again) again.focus({ preventScroll: true });
     return;
   }
-  const summary = e.target.closest('details.group > summary');
+  const summary = e.target.closest('details.group > summary, details.stage > summary');
   if (summary) groupOpen[summary.parentNode.getAttribute('data-key')] = !summary.parentNode.open;
 });
 
