@@ -1,0 +1,42 @@
+<!doctype html>
+<!--
+  Collection Tracker — the one HTML page the whole app lives in.
+  The app swaps what is shown inside <main id="view"> as you move between
+  pages, so this file stays tiny. All the work happens in app.js.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover lets the app use the full screen, including round corners and camera cut-outs -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Offline tracker for collectables in the games I play.">
+  <!-- Colour of the phone's status bar while the app is open (light and dark mode) -->
+  <meta name="theme-color" content="#eef0f5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d1020" media="(prefers-color-scheme: dark)">
+  <title>Collection Tracker</title>
+  <!-- The manifest tells Android this website can be installed as an app -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Top bar: back button and page title -->
+  <header class="topbar">
+    <button type="button" id="back-btn" class="icon-btn" aria-label="Back" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+    </button>
+    <h1 id="page-title">Collections</h1>
+  </header>
+
+  <!-- Every page (home, game, collection) is drawn in here -->
+  <main id="view"></main>
+
+  <!-- Small message that appears when a newer version of the app has been downloaded -->
+  <button type="button" id="update-toast" class="toast" hidden>App updated. Tap to reload.</button>
+
+  <!-- Game data files must load first: each one adds a game to window.GAMES, which app.js reads.
+       To add a game, add its data file here (and to sw.js). -->
+  <script src="data/resonance.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
