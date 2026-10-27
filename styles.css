@@ -172,6 +172,7 @@ input[type="search"] { flex: 2 1 180px; min-width: 0; }
   display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
   padding-bottom: 6px; border-bottom: 2px solid var(--ink); font-size: 1.3rem;
 }
+.stage-title { display: block; font-size: .95rem; font-weight: 400; font-style: italic; color: var(--muted); }
 .stage h2 small { font: 500 .9rem var(--f-body); color: var(--muted); font-variant-numeric: tabular-nums; }
 .stage h2 small.done { color: var(--gold); font-weight: 700; }
 .regions { margin: 4px 0 0; font-size: .88rem; color: var(--muted); }
@@ -210,11 +211,13 @@ input[type="search"] { flex: 2 1 180px; min-width: 0; }
 .where.none { opacity: .75; }
 .note { align-self: flex-start; margin-top: 3px; padding: 1px 9px; border-radius: 10px; background: var(--gold-soft); font-size: .82rem; }
 .miss { font-size: .85rem; color: var(--warn); }
+.timing { font-size: .85rem; color: var(--gold); }
 .tag {
   padding: 1px 7px; border-radius: 4px; background: var(--aether-soft); color: var(--aether);
   font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
 }
 .tag-miss { background: var(--warn-soft); color: var(--warn); }
+.tag-time { background: var(--gold-soft); color: var(--gold); }
 .item.got .where, .item.got .i-name { color: var(--muted); }
 .item.got .i-name { text-decoration: line-through; }
 

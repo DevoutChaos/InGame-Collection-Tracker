@@ -116,7 +116,7 @@ function getProgress(game) {
 /** Per-collection display choices (hide collected, missable only, blur contents). */
 function getView(game, col) {
   const v = load(game.id + ':' + col.id + ':view', {});
-  return { hide: !!v.hide, miss: !!v.miss, blur: !!v.blur };
+  return { hide: !!v.hide, miss: !!v.miss, blur: !!v.blur, types: Array.isArray(v.types) ? v.types : [] };
 }
 
 function countCollected(game, col) {
@@ -185,7 +185,8 @@ function showGame(game) {
       }).join('') + '</select>' +
       '<label class="check"><input type="checkbox" id="f-only"> This ' + esc(stageWord) + ' only</label>' +
     '</div>' +
-    '<p class="f-hint">Later ' + esc(stageWord) + 's stay hidden in every collection below.</p>' +
+    '<p class="f-hint">Later ' + esc(stageWord) + 's stay hidden in every collection below.' +
+      (game.asideNote ? ' ' + esc(game.asideNote) : '') + '</p>' +
   '</section>';
 
   html += '<section class="cards">';
@@ -238,6 +239,11 @@ function showCollection(game, col) {
       (hasMiss ? '<button type="button" class="chip" id="f-miss" aria-pressed="false">Missable only</button>' : '') +
       (col.showContents ? '<button type="button" class="chip" id="f-blur" aria-pressed="false">Blur contents</button>' : '') +
     '</div>' +
+    // Type buttons (e.g. Weapon, Materia): pick any number. None picked shows everything.
+    (col.types ? '<div class="f-row" role="group" aria-label="Show only these types"><span class="f-label">Show</span>' +
+      col.types.map(function (t) {
+        return '<button type="button" class="chip" data-type="' + esc(t[0]) + '" aria-pressed="false">' + esc(t[1]) + '</button>';
+      }).join('') + '</div>' : '') +
     '<div class="f-progress"><span id="p-text"></span><span class="meter"><i id="p-bar"></i></span></div>' +
   '</section>';
 
@@ -262,6 +268,15 @@ function showCollection(game, col) {
       drawList();
     });
   });
+  view.querySelectorAll('[data-type]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const type = btn.getAttribute('data-type');
+      const at = page.view.types.indexOf(type);
+      if (at >= 0) page.view.types.splice(at, 1); else page.view.types.push(type);
+      save(game.id + ':' + col.id + ':view', page.view);
+      drawList();
+    });
+  });
 
   fillGroupOptions();
   drawList();
@@ -269,9 +284,12 @@ function showCollection(game, col) {
 
 /** The chapters currently allowed on screen, to avoid spoilers. */
 function visibleStages() {
-  const p = page.progress, stages = page.game.stages;
+  const p = page.progress, stages = page.game.stages, aside = page.game.asideStages || [];
   if (p.only) return [p.upTo];
-  return stages.slice(0, stages.indexOf(p.upTo) + 1);
+  // "Aside" chapters (e.g. a flashback whose items don't carry over) only show while you're on them.
+  return stages.slice(0, stages.indexOf(p.upTo) + 1).filter(function (s) {
+    return s === p.upTo || aside.indexOf(s) < 0;
+  });
 }
 
 /** Fills the Location menu with only the locations in the visible chapters. */
@@ -293,8 +311,10 @@ function matches(item, terms) {
   if (page.view.hide && page.got.has(item.id)) return false;
   if (page.view.miss && !item.miss) return false;
   if (page.group && item.group !== page.group) return false;
+  if (page.view.types.length && page.view.types.indexOf(item.type) < 0) return false;
   if (terms.length) {
-    const text = [item.group, item.region || '', item.name || '', item.where, item.note || '', item.miss || ''].join(' ').toLowerCase();
+    const text = [item.group, item.region || '', item.name || '', item.where, item.note || '', item.miss || '', item.timing || '']
+      .join(' ').toLowerCase();
     if (!terms.every(function (t) { return text.indexOf(t) >= 0; })) return false;
   }
   return true;
@@ -309,6 +329,9 @@ function drawList() {
   // Filter chips show whether they are on.
   [['f-hide', 'hide'], ['f-miss', 'miss'], ['f-blur', 'blur']].forEach(function (pair) {
     if ($(pair[0])) $(pair[0]).setAttribute('aria-pressed', String(page.view[pair[1]]));
+  });
+  view.querySelectorAll('[data-type]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(page.view.types.indexOf(btn.getAttribute('data-type')) >= 0));
   });
   view.classList.toggle('blur-contents', page.view.blur);
 
@@ -327,20 +350,25 @@ function drawList() {
     const all = col.items.filter(function (i) { return i.stage === stage; });
     const shown = all.filter(function (i) { return matches(i, terms); });
     const stageGot = all.filter(function (i) { return got.has(i.id); }).length;
-    if (!shown.length && (terms.length || page.group || page.view.miss)) return;
+    if (!shown.length && (terms.length || page.group || page.view.miss || page.view.types.length)) return;
 
     const regions = [];
     all.forEach(function (i) { if (i.region && regions.indexOf(i.region) < 0) regions.push(i.region); });
+    const title = (game.stageTitles || {})[stage];
 
-    html += '<section class="stage"><h2>' + esc(stageLabel(game, stage)) +
-      '<small class="' + (stageGot === all.length ? 'done' : '') + '">' + stageGot + ' / ' + all.length + '</small></h2>';
+    html += '<section class="stage"><h2><span>' + esc(stageLabel(game, stage)) +
+      (title ? '<span class="stage-title">' + esc(title) + '</span>' : '') + '</span>' +
+      (all.length ? '<small class="' + (stageGot === all.length ? 'done' : '') + '">' + stageGot + ' / ' + all.length + '</small>' : '') +
+      '</h2>';
     if (regions.length) html += '<p class="regions">' + esc(regions.join(' · ')) + '</p>';
     ((col.stageNotes || {})[stage] || []).forEach(function (n) {
       html += '<p class="alert alert-' + esc(n.kind) + '">' + (n.title ? '<b>' + esc(n.title) + ':</b> ' : '') + esc(n.text) + '</p>';
     });
 
     if (!shown.length) {
-      html += '<p class="empty">Everything in this ' + esc(game.stageName.toLowerCase()) + ' is collected.</p></section>';
+      // A chapter can have nothing to collect at all (it then just shows its notes).
+      if (all.length) html += '<p class="empty">Everything in this ' + esc(game.stageName.toLowerCase()) + ' is collected.</p>';
+      html += '</section>';
       return;
     }
 
@@ -354,13 +382,15 @@ function drawList() {
       const key = game.id + '/' + col.id + '/' + stage + '|' + group;
       const complete = groupGot === groupAll.length;
       // Folded until you open it, so a long list isn't overwhelming. Searching, picking a
-      // location or "Missable only" opens what matches.
-      const open = terms.length || page.group || page.view.miss ? true : !!groupOpen[key];
+      // location, a type button or "Missable only" opens what matches.
+      const open = terms.length || page.group || page.view.miss || page.view.types.length ? true : !!groupOpen[key];
       const hasMiss = items.some(function (i) { return i.miss; });
+      const hasTiming = !hasMiss && items.some(function (i) { return i.timing; });
 
       html += '<details class="group' + (complete ? ' complete' : '') + '" data-key="' + esc(key) + '"' + (open ? ' open' : '') + '>' +
         '<summary><span class="chev" aria-hidden="true"></span><span class="g-name">' + esc(group) + '</span>' +
         (hasMiss ? '<span class="tag tag-miss">Missable</span>' : '') +
+        (hasTiming ? '<span class="tag tag-time">Timing</span>' : '') +
         '<span class="g-count">' + groupGot + ' / ' + groupAll.length + '</span></summary>';
       const note = (col.groupNotes || {})[group] || (col.groupNotes || {})[group.replace(/ — .*$/, '')];
       if (note) html += '<p class="g-note">' + esc(note) + '</p>';
@@ -375,7 +405,8 @@ function drawList() {
   const all = game.stages;
   const last = stages[stages.length - 1];
   const later = all.slice(all.indexOf(last) + 1);
-  const earlier = all.slice(0, all.indexOf(stages[0]));
+  const aside = game.asideStages || [];
+  const earlier = all.slice(0, all.indexOf(stages[0])).filter(function (s) { return page.progress.only || aside.indexOf(s) < 0; });
   if (later.length) {
     const n = col.items.filter(function (i) { return later.indexOf(i.stage) >= 0; }).length;
     html += '<p class="locked"><b>' + esc(stageRange(game, later)) + '</b> hidden to avoid spoilers (' + n + ' more). ' +
@@ -383,6 +414,9 @@ function drawList() {
   }
   if (earlier.length) html += '<p class="locked">' + esc(stageRange(game, earlier)) + ' hidden while “This ' +
     esc(game.stageName.toLowerCase()) + ' only” is on (on the ' + gameLink(game) + ' page).</p>';
+  if (!page.progress.only && game.asideNote && aside.some(function (s) { return stages.indexOf(s) < 0 && all.indexOf(s) < all.indexOf(page.progress.upTo); })) {
+    html += '<p class="locked">' + esc(game.asideNote) + '</p>';
+  }
 
   $('col-list').innerHTML = html;
 }
@@ -409,6 +443,7 @@ function itemRow(item) {
   }
   if (item.note) body += '<span class="note">' + esc(item.note) + '</span>';
   if (item.miss) body += '<span class="miss"><span class="tag tag-miss">Missable</span> ' + esc(item.miss) + '</span>';
+  if (item.timing) body += '<span class="timing"><span class="tag tag-time">Timing</span> ' + esc(item.timing) + '</span>';
 
   return '<li class="item' + (got ? ' got' : '') + '">' +
     '<button type="button" class="mark mark-' + (MARKS[page.col.icon] || 'box') + '" data-id="' + esc(item.id) + '" aria-pressed="' + got + '" ' +

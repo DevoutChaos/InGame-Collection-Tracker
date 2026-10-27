@@ -9,7 +9,7 @@
    WHEN YOU UPDATE THE APP: change CACHE_VERSION below (e.g. v1 → v2).
    That tells phones there's a new version to download.
    ============================================================ */
-const CACHE_VERSION = 'collection-tracker-v1';
+const CACHE_VERSION = 'collection-tracker-v1.1';
 
 // Every file the app needs. If you add a file to the app (such as a new game's
 // data file), add it here too. Images don't need adding.
@@ -19,6 +19,7 @@ const APP_FILES = [
   './styles.css',
   './app.js',
   './data/resonance.js',
+  './data/rebirth.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png'
