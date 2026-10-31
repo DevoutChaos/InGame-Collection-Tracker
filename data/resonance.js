@@ -12,6 +12,8 @@
                    CH_ALERTS   chapter -> warnings shown at the top of the chapter
    Tablet Shards   SHARDS      [number, chapter, location, where to find it, optional note]
                    REWARDS     [shards needed, chamber, reward] (Oblivion Palace safes)
+   Colosseum       COLOSSEUM   [league, battle, recommended level, opponents, first win, later wins, league clear]
+                   (from ffresonance.wiki, 31 Oct 2026)
 
    KEEPING TICKS WHEN THE GUIDES CHANGE
    Ticks are saved under each chest's key and each shard's number, never its
@@ -62,6 +64,30 @@ const CH_ALERTS = {
   3:[["note","<b>Point of no return warning</b> before the Old Town of Olderion. You can come back after the story."]],
   8:[["warn","<b>Final point of no return:</b> the portal next to the save point in the Crystal Tower's Upper Reach. Finish everything you want first. After the ending, your cleared save resumes just before the final area."]]
 };
+
+// Colosseum: opens in Chapter 4. Each battle opens after the one before it, and each league after the last.
+const COLOSSEUM = [
+["Fledgling",1,25,"Wyvern, Magma Tortoise, Coeurl","Magicite Shard","Hi-Potion",""],
+["Fledgling",2,27,"Chimera","Adamantite","Hi-Potion",""],
+["Fledgling",3,29,"Balaur ×2, Simurgh, Blood Worm","Ancient Greatsword","Hi-Potion",""],
+["Fledgling",4,31,"Ice Lizard, Gray Bomb, Lieutenant","Magicite Shard","Hi-Potion",""],
+["Fledgling",5,32,"Allosaur, Ice Sculpture, Ahriman","Gaia Hammer","Hi-Potion","Fledgling's Proof of Victory"],
+["Brawler",1,40,"Wild Maneuverer, Dark Fang","Magicite","Turbo Ether",""],
+["Brawler",2,41,"Chaos Dragon, Hexadragon","Adamantite","Turbo Ether",""],
+["Brawler",3,43,"Ochu, Microchu ×2","Adamantite","Turbo Ether",""],
+["Brawler",4,45,"Flan Princess ×5","Magicite","Turbo Ether",""],
+["Brawler",5,48,"Red, Blue, Earth and Aqua Elementals, then Dark, White and Green Elementals","Ancient Cuirass","Turbo Ether","Brawler's Proof of Victory"],
+["Gladiator",1,55,"Zone Eater","Magicite Cryst","X-Potion",""],
+["Gladiator",2,58,"Hidon","Reflect Ring","X-Potion",""],
+["Gladiator",3,62,"Donchu","Barrier Ring","X-Potion",""],
+["Gladiator",4,66,"Death Machine","Protect Ring","X-Potion",""],
+["Gladiator",5,70,"Gargantuan Gigantuar","Magicite Cryst","X-Potion","Gladiator's Proof of Victory"],
+["Champion",1,75,"Malboro Queen","Super Ribbon","X-Ether",""],
+["Champion",2,80,"Holy Dragon","Lorica Sancta","X-Ether",""],
+["Champion",3,90,"Beast of Ruin","Lorica Apocalyptica","X-Ether",""],
+["Champion",4,95,"Shinryu","Dragon Seal","X-Ether",""],
+["Champion",5,99,"Omega","Omega Badge","X-Ether",""]
+];
 
 // Oblivion Palace treasure rooms: shown as their own collection, in one always-visible section.
 const PALACE_NOTE = "Treasure rooms open with Tablet Shards (3 shards for the first chest). Later chests need shards from later chapters, so expect to fill this in over the whole game.";
@@ -226,6 +252,16 @@ ROWS.forEach(function (r) {
   chestItems.push(item);
 });
 
+// Each battle is ticked once you have won it for the first time.
+const colosseumItems = COLOSSEUM.map(function (c) {
+  return {
+    id: c[0] + '|' + c[1], num: c[1], stage: 'Colosseum', group: c[0] + ' League',
+    name: c[3], tags: ['Lv ' + c[2]],
+    where: 'First win: ' + c[4] + '. Later wins: ' + c[5] + '.',
+    note: c[6] ? 'League clear: ' + c[6] : ''
+  };
+});
+
 window.GAMES = (window.GAMES || []).concat([{
   id: 'resonance',
   name: 'Final Fantasy Resonance',
@@ -284,6 +320,22 @@ window.GAMES = (window.GAMES || []).concat([{
       // These chests were part of Treasure Chests before V1.4; their ticks are copied across.
       movedFrom: ['treasure-chests'],
       footer: 'Rewards and shard counts from the PowerPyx guide. Contents from NiaMeowDB.'
+    },
+    {
+      id: 'colosseum',
+      name: 'Colosseum',
+      blurb: 'Every battle, who you fight and what you win.',
+      tint: ['#401616', '#a8452a'],
+      icon: 'crystal',
+      showContents: true,
+      items: colosseumItems,
+      section: 'Colosseum',
+      // Shown as "???" (and not openable) until "I'm up to" reaches Chapter 4.
+      unlockAt: 4,
+      stageNotes: { 'Colosseum': [{ kind: 'note', title: '', text: 'Take the west exit from Grandshelt\'s main screen. ' +
+        'Each battle opens once you win the one before it. Tick a battle when you first win it.' }] },
+      footer: 'Battles, levels and rewards from ffresonance.wiki (31 Oct 2026). Each league\'s Proof of Victory ' +
+        'unlocks more items in the Colosseum shop.'
     }
   ]
 }]);
