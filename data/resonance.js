@@ -284,7 +284,11 @@ window.GAMES = (window.GAMES || []).concat([{
       items: shardItems,
       milestones: {
         title: 'Oblivion Palace rewards',
-        list: REWARDS.map(function (r) { return { at: r[0], title: r[2], detail: r[1] + ' Chamber' }; })
+        // Each reward is also an Oblivion Palace chest in Treasure Chests; ticking it there marks it collected here.
+        claimedIn: 'treasure-chests',
+        list: REWARDS.map(function (r, i) {
+          return { id: 'Oblivion Palace|' + (i + 1), at: r[0], title: r[2], detail: r[1] + ' Chamber' };
+        })
       },
       footer: 'Hand shards to the Enigmatic Princess at Oblivion Palace in Grandshelt. 89 are enough for the trophies. ' +
         'Nothing is missable. If you\'re one short in Dirnado, recheck both Mt. Thunderclap routes and the Cavern of ' +

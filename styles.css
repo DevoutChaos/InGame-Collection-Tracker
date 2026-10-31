@@ -167,7 +167,13 @@ input[type="search"] { flex: 2 1 180px; min-width: 0; }
 .ms-at { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ms-state { font-size: .8rem; color: var(--muted); white-space: nowrap; }
 .ms-list li.done .ms-at, .ms-list li.done .ms-state { color: var(--gold); }
-.ms-list li.next { background: var(--gold-soft); }
+/* Next reward to unlock: gold. Unlocked but not picked up yet: blue. Picked up: struck through. */
+.ms-list li.next { background: var(--gold-soft); box-shadow: inset 4px 0 var(--gold); }
+.ms-list li.next .ms-state { color: var(--gold); font-weight: 700; }
+.ms-list li.ready { background: var(--aether-soft); box-shadow: inset 4px 0 var(--aether); }
+.ms-list li.ready .ms-at, .ms-list li.ready .ms-state { color: var(--aether); font-weight: 700; }
+.ms-list li.claimed .ms-title { color: var(--muted); text-decoration: line-through; }
+.ms-list li.claimed .ms-state { color: var(--gold); }
 
 /* ---------- 5. Collection page: chapters, locations and items ---------- */
 .stage { margin-top: 26px; }

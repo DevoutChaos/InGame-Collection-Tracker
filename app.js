@@ -512,14 +512,21 @@ function drawMilestones(count) {
     head = '<span class="ms-next">Next: ' + esc(next.title) + ' <small>(' + esc(next.detail) + ', ' + next.at + ')</small></span>' +
       '<span class="ms-need">' + (next.at - count) + ' more</span>' + meter(count - prev, next.at - prev);
   }
+  // If the rewards are also items in another collection ("claimedIn"), its ticks say which ones you have picked up.
+  const claimedCol = m.claimedIn ? findCollection(page.game, m.claimedIn) : null;
+  const claimed = claimedCol ? getCollected(page.game, claimedCol) : new Set();
   const box = $('milestones');
   const wasOpen = box.open;
   box.innerHTML = '<summary>' + head + '<span class="ms-all">' + esc(m.title) + '</span></summary>' +
     '<ol class="ms-list">' + m.list.map(function (r, i) {
       const done = count >= r.at;
-      return '<li class="' + (done ? 'done' : '') + (i === nextIndex ? ' next' : '') + '"><span class="ms-at">' + r.at + '</span>' +
-        '<span>' + esc(r.title) + ' <small>' + esc(r.detail) + '</small></span>' +
-        '<span class="ms-state">' + (done ? 'Unlocked' : (r.at - count) + ' to go') + '</span></li>';
+      const got = claimed.has(r.id);
+      // Collected: struck through. Unlocked but not collected yet: highlighted. Next to unlock: its own highlight.
+      const state = got ? 'claimed' : done ? (claimedCol ? 'ready' : 'done') : i === nextIndex ? 'next' : '';
+      const label = got ? 'Collected' : done ? (claimedCol ? 'Ready to collect' : 'Unlocked') : (r.at - count) + ' to go';
+      return '<li class="' + state + '"><span class="ms-at">' + r.at + '</span>' +
+        '<span class="ms-title">' + esc(r.title) + ' <small>' + esc(r.detail) + '</small></span>' +
+        '<span class="ms-state">' + label + '</span></li>';
     }).join('') + '</ol>';
   box.open = wasOpen;
 }
