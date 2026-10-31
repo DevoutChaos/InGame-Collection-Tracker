@@ -74,7 +74,7 @@ const COLOSSEUM = [
 ["Fledgling",5,32,"Allosaur, Ice Sculpture, Ahriman","Gaia Hammer","Hi-Potion","Fledgling's Proof of Victory"],
 ["Brawler",1,40,"Wild Maneuverer, Dark Fang","Magicite","Turbo Ether",""],
 ["Brawler",2,41,"Chaos Dragon, Hexadragon","Adamantite","Turbo Ether",""],
-["Brawler",3,43,"Ochu, Microchu ×2","Adamantite","Turbo Ether",""],
+["Brawler",3,43,"Microchu ×2, Ochu","Adamantite","Turbo Ether",""],
 ["Brawler",4,45,"Flan Princess ×5","Magicite","Turbo Ether",""],
 ["Brawler",5,48,"Red, Blue, Earth and Aqua Elementals, then Dark, White and Green Elementals","Ancient Cuirass","Turbo Ether","Brawler's Proof of Victory"],
 ["Gladiator",1,55,"Zone Eater","Magicite Cryst","X-Potion",""],
@@ -332,8 +332,9 @@ window.GAMES = (window.GAMES || []).concat([{
       section: 'Colosseum',
       // Shown as "???" (and not openable) until "I'm up to" reaches Chapter 4.
       unlockAt: 4,
-      stageNotes: { 'Colosseum': [{ kind: 'note', title: '', text: 'Take the west exit from Grandshelt\'s main screen. ' +
-        'Each battle opens once you win the one before it. Tick a battle when you first win it.' }] },
+      stageNotes: { 'Colosseum': [{ kind: 'note', title: '', text: 'In Grandshelt, the Royal Capital (west exit from its main ' +
+        'screen). Opens at the start of Chapter 4. Each battle opens once you win the one before it. Tick a battle ' +
+        'when you first win it.' }] },
       footer: 'Battles, levels and rewards from ffresonance.wiki (31 Oct 2026). Each league\'s Proof of Victory ' +
         'unlocks more items in the Colosseum shop.'
     }
