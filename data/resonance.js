@@ -89,7 +89,7 @@ const COLOSSEUM = [
 ["Champion",5,99,"Omega","Omega Badge","X-Ether",""]
 ];
 
-// Oblivion Palace treasure rooms: shown as their own collection, in one always-visible section.
+// Oblivion Palace treasure rooms: a section of Treasure Chests that shows whatever chapter you're on.
 const PALACE_NOTE = "Treasure rooms open with Tablet Shards (3 shards for the first chest). Later chests need shards from later chapters, so expect to fill this in over the whole game.";
 
 const REWARDS=[
@@ -221,12 +221,13 @@ function splitAlert(alert) {
 }
 const chestStageNotes = {};
 Object.keys(CH_ALERTS).forEach(function (c) { chestStageNotes[c] = CH_ALERTS[c].map(splitAlert); });
+chestStageNotes['Oblivion Palace'] = [{ kind: 'note', title: '', text: PALACE_NOTE }];
 
 const shardItems = SHARDS.map(function (s) {
   return { id: String(s[0]), num: s[0], stage: s[1], group: s[2], where: s[3], note: s[4] || '' };
 });
 
-const chestItems = [], palaceItems = [];
+const chestItems = [];
 ROWS.forEach(function (r) {
   const key = r[6];
   const item = {
@@ -240,7 +241,7 @@ ROWS.forEach(function (r) {
     item.group = reward[1] + ' Chamber';
     delete item.region;
     item.where = 'Opens once you have handed ' + reward[0] + ' Tablet Shards to the Enigmatic Princess.';
-    palaceItems.push(item);
+    chestItems.push(item);
     return;
   }
   if (LOC[key]) {
@@ -298,28 +299,15 @@ window.GAMES = (window.GAMES || []).concat([{
       icon: 'chest',
       showContents: true,
       items: chestItems,
+      // The Oblivion Palace treasures fill in over the whole game, so their section always shows.
+      alwaysStages: ['Oblivion Palace'],
       stageNotes: chestStageNotes,
       groupNotes: ZONE_NOTES,
       footer: 'Locations in italics give only the floor or part of the area, because no guide yet describes the exact ' +
         'spot. Directions from Vorxu\'s walkthrough (Chapters 1–4), with floors and extra detail from allthings.how, ' +
         'ffresonance.wiki, MeowDB and 9Puz. Contents and zone groupings from NiaMeowDB. Last checked against the guides ' +
         'on 31 October 2026. The game launched on 22 October, so guides are still changing: keep a spare save ' +
-        'before big story moments.'
-    },
-    {
-      id: 'oblivion-palace',
-      name: 'Oblivion Palace Treasures',
-      blurb: 'The 25 treasure rooms you open by handing in Tablet Shards.',
-      tint: ['#2a1640', '#7a4fb0'],
-      icon: 'chest',
-      showContents: true,
-      items: palaceItems,
-      // Not tied to a chapter: always shown, under its own "Oblivion Palace" heading.
-      section: 'Oblivion Palace',
-      stageNotes: { 'Oblivion Palace': [{ kind: 'note', title: '', text: PALACE_NOTE }] },
-      // These chests were part of Treasure Chests before V1.4; their ticks are copied across.
-      movedFrom: ['treasure-chests'],
-      footer: 'Rewards and shard counts from the PowerPyx guide. Contents from NiaMeowDB.'
+        'before big story moments. Oblivion Palace rewards and shard counts from the PowerPyx guide.'
     },
     {
       id: 'colosseum',

@@ -104,22 +104,8 @@ function save(key, value) {
   try { localStorage.setItem(STORE + ':' + key, JSON.stringify(value)); } catch (e) { /* storage full or blocked */ }
 }
 
-/** The ids of everything collected in one collection.
-    If its items used to live in another collection ("movedFrom"), their ticks are copied
-    across the first time, so moving items between collections never loses progress. */
-function getCollected(game, col) {
-  let ids = load(game.id + ':' + col.id, null);
-  if (!ids) {
-    ids = [];
-    (col.movedFrom || []).forEach(function (from) {
-      load(game.id + ':' + from, []).forEach(function (id) {
-        if (col.items.some(function (i) { return i.id === id; })) ids.push(id);
-      });
-    });
-    if (ids.length) save(game.id + ':' + col.id, ids);
-  }
-  return new Set(ids);
-}
+/** The ids of everything collected in one collection. */
+function getCollected(game, col) { return new Set(load(game.id + ':' + col.id, [])); }
 function setCollected(game, col, set) { save(game.id + ':' + col.id, Array.from(set)); }
 
 /** Is this collection still locked ("unlockAt": the chapter it opens in)? */
@@ -331,9 +317,14 @@ function visibleStages() {
   });
 }
 
+/** Everything shown on the page: sections that always show (e.g. Oblivion Palace), then the visible chapters. */
+function shownStages() {
+  return (page.col.alwaysStages || []).concat(visibleStages());
+}
+
 /** Fills the Location menu with only the locations in the visible chapters. */
 function fillGroupOptions() {
-  const stages = visibleStages();
+  const stages = shownStages();
   const groups = [];
   page.col.items.forEach(function (item) {
     if (stages.indexOf(item.stage) >= 0 && groups.indexOf(item.group) < 0) groups.push(item.group);
@@ -362,7 +353,8 @@ function matches(item, terms) {
 /** Redraws the checklist, progress bar and rewards. Runs after any change. */
 function drawList() {
   const game = page.game, col = page.col, got = page.got;
-  const stages = visibleStages();
+  const stages = shownStages();
+  const chapters = visibleStages();
   const terms = page.q.toLowerCase().split(/\s+/).filter(Boolean);
 
   // Filter chips show whether they are on.
@@ -379,7 +371,8 @@ function drawList() {
   $('overall').textContent = totalGot + ' of ' + col.items.length + ' collected';
   const inView = col.items.filter(function (i) { return stages.indexOf(i.stage) >= 0; });
   const viewGot = inView.filter(function (i) { return got.has(i.id); }).length;
-  $('p-text').textContent = viewGot + ' / ' + inView.length + ' in ' + stageRange(game, stages);
+  $('p-text').textContent = viewGot + ' / ' + inView.length + ' in ' +
+    [stageRange(game, chapters)].concat(col.alwaysStages || []).join(' and ');
   $('p-bar').style.width = (inView.length ? viewGot / inView.length * 100 : 0) + '%';
 
   if (col.milestones) drawMilestones(totalGot);
@@ -447,7 +440,7 @@ function drawList() {
   if (!html) html = '<p class="empty">Nothing matches these filters.</p>';
 
   // Say what's hidden, so it's clear the list isn't the whole game.
-  $('col-list').innerHTML = html + (col.section ? '' : hiddenNotes(game, col, stages));
+  $('col-list').innerHTML = html + (col.section ? '' : hiddenNotes(game, col, chapters));
 }
 
 /** Notes saying which chapters are hidden and how to show them. */
