@@ -2,7 +2,7 @@
 
 An offline checklist for collectables in the games I play:
 
-- **Final Fantasy Resonance:** all 99 Tablet Shards and 220 Treasure Chests.
+- **Final Fantasy Resonance:** all 99 Tablet Shards and 223 Treasure Chests.
 - **Final Fantasy VII Rebirth:** Treasure: chests, materia on the ground and open-world caches across all 14 chapters.
 
 Fan-made tool, not affiliated with any game publisher. Game names and artwork belong to their owners.
@@ -85,3 +85,4 @@ When the app is next opened online, **"App updated. Tap to reload."** appears.
 | v1 | Final Fantasy Resonance: Tablet Shards and Treasure Chests |
 | v1.1 | Final Fantasy VII Rebirth: Treasure, with Weapon / Materia / Item / Gil filters |
 | v1.2 | Chapters can be folded away by tapping their heading |
+| v1.3 | Final Fantasy Resonance: chest and Tablet Shard locations updated from the latest guides (31 Oct). Saved ticks carry over |
