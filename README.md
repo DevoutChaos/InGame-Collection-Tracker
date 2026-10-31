@@ -2,7 +2,7 @@
 
 An offline checklist for collectables in the games I play:
 
-- **Final Fantasy Resonance:** all 99 Tablet Shards and 223 Treasure Chests.
+- **Final Fantasy Resonance:** all 99 Tablet Shards, 223 Treasure Chests (including the 25 Oblivion Palace treasures) and all 20 Colosseum battles.
 - **Final Fantasy VII Rebirth:** Treasure: chests, materia on the ground and open-world caches across all 14 chapters.
 
 Fan-made tool, not affiliated with any game publisher. Game names and artwork belong to their owners.
@@ -31,7 +31,7 @@ On Samsung Internet, tap **☰**, then **Add page to**, then **Home screen**.
 
 1. **Home:** tap a game.
 2. **Game:** set how far you've played (see below), then tap a collection:
-   - Resonance: *Tablet Shards* or *Treasure Chests*
+   - Resonance: *Tablet Shards*, *Treasure Chests* or *Colosseum* (shown as ??? until you're up to Chapter 4)
    - Rebirth: *Treasure*
 3. **Collection:** tap the shard or box next to an item to mark it collected. Tap again to undo.
 
@@ -87,3 +87,4 @@ When the app is next opened online, **"App updated. Tap to reload."** appears.
 | v1.2 | Chapters can be folded away by tapping their heading |
 | v1.3 | Final Fantasy Resonance: chest and Tablet Shard locations updated from the latest guides (31 Oct). Saved ticks carry over |
 | v1.3.1 | Minor corrections: Tablet Shards taken from the Tablet Shards page again (Dragon's Maw shard back in Chapter 8, fuller directions and notes) |
+| v1.4 | Final Fantasy Resonance: new Colosseum collection; Oblivion Palace treasures always shown in Treasure Chests; Chapter 1 castle chests marked Temporarily missable; Fina's Psyche no longer missable |

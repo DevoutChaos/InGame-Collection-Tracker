@@ -54,7 +54,8 @@ function esc(text) {
 function findGame(id) { return GAMES.find(function (g) { return g.id === id; }); }
 function findCollection(game, id) { return game.collections.find(function (c) { return c.id === id; }); }
 
-function stageLabel(game, stage) { return game.stageName + ' ' + stage; }
+/** "Chapter 3", or a section's own name (e.g. "Oblivion Palace") for a collection that has one. */
+function stageLabel(game, stage) { return game.stages.indexOf(stage) >= 0 ? game.stageName + ' ' + stage : String(stage); }
 
 /** "Chapters 1–3", or "Chapter 2" for a single one. */
 function stageRange(game, list) {
@@ -107,6 +108,11 @@ function save(key, value) {
 function getCollected(game, col) { return new Set(load(game.id + ':' + col.id, [])); }
 function setCollected(game, col, set) { save(game.id + ':' + col.id, Array.from(set)); }
 
+/** Is this collection still locked ("unlockAt": the chapter it opens in)? */
+function isLocked(game, col) {
+  return !!col.unlockAt && game.stages.indexOf(getProgress(game).upTo) < game.stages.indexOf(col.unlockAt);
+}
+
 /** How far through the game you are. Shared by all of a game's collections. */
 function getProgress(game) {
   const p = load(game.id + ':progress', {});
@@ -133,8 +139,15 @@ function setTitle(text) {
   document.title = text === 'Collections' ? 'Collection Tracker' : text + ' · Collection Tracker';
 }
 
-/** A big tappable card with a splash background, used for games and collections. */
+/** A big tappable card with a splash background, used for games and collections.
+    With no href it is a locked card: not tappable, and no progress bar. */
 function card(href, thing, title, sub, done, total) {
+  if (!href) {
+    return '<div class="card card-locked" aria-disabled="true"' + artAttrs(thing) + '>' +
+      '<span class="card-icon" aria-hidden="true">' + (ICONS[thing.icon] || '') + '</span>' +
+      '<span class="card-text"><span class="card-title">' + esc(title) + '</span>' +
+      '<span class="card-sub">' + esc(sub) + '</span></span></div>';
+  }
   return '<a class="card" href="' + href + '"' + artAttrs(thing) + '>' +
     '<span class="card-icon" aria-hidden="true">' + (ICONS[thing.icon] || '') + '</span>' +
     '<span class="card-text"><span class="card-title">' + esc(title) + '</span>' +
@@ -189,24 +202,33 @@ function showGame(game) {
       (game.asideNote ? ' ' + esc(game.asideNote) : '') + '</p>' +
   '</section>';
 
-  html += '<section class="cards">';
-  game.collections.forEach(function (col) {
-    html += card('#/g/' + game.id + '/' + col.id, col, col.name, col.blurb || '', countCollected(game, col), col.items.length);
-  });
-  html += '</section>';
+  html += '<section class="cards" id="col-cards"></section>';
   view.innerHTML = html;
-  loadArt(view);
+  drawCards(game);
 
   $('f-stage').value = progress.upTo;
   $('f-only').checked = progress.only;
   $('f-stage').addEventListener('change', function (e) {
     progress.upTo = +e.target.value;
     save(game.id + ':progress', progress);
+    drawCards(game);
   });
   $('f-only').addEventListener('change', function (e) {
     progress.only = e.target.checked;
     save(game.id + ':progress', progress);
   });
+}
+
+/** The collection cards on the game page. A collection that opens in a later chapter
+    shows as "???" until "I'm up to" reaches that chapter. */
+function drawCards(game) {
+  $('col-cards').innerHTML = game.collections.map(function (col) {
+    if (isLocked(game, col)) {
+      return card('', col, '???', 'This is unlocked during ' + stageLabel(game, col.unlockAt), 0, 0);
+    }
+    return card('#/g/' + game.id + '/' + col.id, col, col.name, col.blurb || '', countCollected(game, col), col.items.length);
+  }).join('');
+  loadArt($('col-cards'));
 }
 
 /* --- Collection page --- */
@@ -283,8 +305,10 @@ function showCollection(game, col) {
   drawList();
 }
 
-/** The chapters currently allowed on screen, to avoid spoilers. */
+/** The chapters currently allowed on screen, to avoid spoilers.
+    A collection with its own "section" (e.g. Oblivion Palace) always shows just that. */
 function visibleStages() {
+  if (page.col.section) return [page.col.section];
   const p = page.progress, stages = page.game.stages, aside = page.game.asideStages || [];
   if (p.only) return [p.upTo];
   // "Aside" chapters (e.g. a flashback whose items don't carry over) only show while you're on them.
@@ -293,9 +317,14 @@ function visibleStages() {
   });
 }
 
+/** Everything shown on the page: sections that always show (e.g. Oblivion Palace), then the visible chapters. */
+function shownStages() {
+  return (page.col.alwaysStages || []).concat(visibleStages());
+}
+
 /** Fills the Location menu with only the locations in the visible chapters. */
 function fillGroupOptions() {
-  const stages = visibleStages();
+  const stages = shownStages();
   const groups = [];
   page.col.items.forEach(function (item) {
     if (stages.indexOf(item.stage) >= 0 && groups.indexOf(item.group) < 0) groups.push(item.group);
@@ -324,7 +353,8 @@ function matches(item, terms) {
 /** Redraws the checklist, progress bar and rewards. Runs after any change. */
 function drawList() {
   const game = page.game, col = page.col, got = page.got;
-  const stages = visibleStages();
+  const stages = shownStages();
+  const chapters = visibleStages();
   const terms = page.q.toLowerCase().split(/\s+/).filter(Boolean);
 
   // Filter chips show whether they are on.
@@ -341,7 +371,8 @@ function drawList() {
   $('overall').textContent = totalGot + ' of ' + col.items.length + ' collected';
   const inView = col.items.filter(function (i) { return stages.indexOf(i.stage) >= 0; });
   const viewGot = inView.filter(function (i) { return got.has(i.id); }).length;
-  $('p-text').textContent = viewGot + ' / ' + inView.length + ' in ' + stageRange(game, stages);
+  $('p-text').textContent = viewGot + ' / ' + inView.length + ' in ' +
+    [stageRange(game, chapters)].concat(col.alwaysStages || []).join(' and ');
   $('p-bar').style.width = (inView.length ? viewGot / inView.length * 100 : 0) + '%';
 
   if (col.milestones) drawMilestones(totalGot);
@@ -389,12 +420,14 @@ function drawList() {
       // Folded until you open it, so a long list isn't overwhelming. Searching, picking a
       // location, a type button or "Missable only" opens what matches.
       const open = terms.length || page.group || page.view.miss || page.view.types.length ? true : !!groupOpen[key];
-      const hasMiss = items.some(function (i) { return i.miss; });
+      const missed = items.filter(function (i) { return i.miss; });
+      const hasMiss = missed.length > 0;
+      const allTemp = hasMiss && missed.every(function (i) { return i.missTemp; });
       const hasTiming = !hasMiss && items.some(function (i) { return i.timing; });
 
       html += '<details class="group' + (complete ? ' complete' : '') + '" data-key="' + esc(key) + '"' + (open ? ' open' : '') + '>' +
         '<summary><span class="chev" aria-hidden="true"></span><span class="g-name">' + esc(group) + '</span>' +
-        (hasMiss ? '<span class="tag tag-miss">Missable</span>' : '') +
+        (hasMiss ? missTag(allTemp) : '') +
         (hasTiming ? '<span class="tag tag-time">Timing</span>' : '') +
         '<span class="g-count">' + groupGot + ' / ' + groupAll.length + '</span></summary>';
       const note = (col.groupNotes || {})[group] || (col.groupNotes || {})[group.replace(/ — .*$/, '')];
@@ -407,6 +440,12 @@ function drawList() {
   if (!html) html = '<p class="empty">Nothing matches these filters.</p>';
 
   // Say what's hidden, so it's clear the list isn't the whole game.
+  $('col-list').innerHTML = html + (col.section ? '' : hiddenNotes(game, col, chapters));
+}
+
+/** Notes saying which chapters are hidden and how to show them. */
+function hiddenNotes(game, col, stages) {
+  let html = '';
   const all = game.stages;
   const last = stages[stages.length - 1];
   const later = all.slice(all.indexOf(last) + 1);
@@ -422,13 +461,17 @@ function drawList() {
   if (!page.progress.only && game.asideNote && aside.some(function (s) { return stages.indexOf(s) < 0 && all.indexOf(s) < all.indexOf(page.progress.upTo); })) {
     html += '<p class="locked">' + esc(game.asideNote) + '</p>';
   }
-
-  $('col-list').innerHTML = html;
+  return html;
 }
 
 /** A link back up to the game page, where the chapter picker is. */
 function gameLink(game) {
   return '<a class="text-link" href="#/g/' + esc(game.id) + '">' + esc(game.short || game.name) + '</a>';
+}
+
+/** "Missable", or "Temporarily missable" for something you get another chance at later. */
+function missTag(temp) {
+  return temp ? '<span class="tag tag-temp">Temporarily missable</span>' : '<span class="tag tag-miss">Missable</span>';
 }
 
 /** One item: the tick button, then what it is and where to find it. */
@@ -447,7 +490,7 @@ function itemRow(item) {
     body += '<span class="where"><span class="num">#' + item.num + '</span>' + esc(item.where) + '</span>';
   }
   if (item.note) body += '<span class="note">' + esc(item.note) + '</span>';
-  if (item.miss) body += '<span class="miss"><span class="tag tag-miss">Missable</span> ' + esc(item.miss) + '</span>';
+  if (item.miss) body += '<span class="miss' + (item.missTemp ? ' miss-temp' : '') + '">' + missTag(item.missTemp) + ' ' + esc(item.miss) + '</span>';
   if (item.timing) body += '<span class="timing"><span class="tag tag-time">Timing</span> ' + esc(item.timing) + '</span>';
 
   return '<li class="item' + (got ? ' got' : '') + '">' +
@@ -469,14 +512,21 @@ function drawMilestones(count) {
     head = '<span class="ms-next">Next: ' + esc(next.title) + ' <small>(' + esc(next.detail) + ', ' + next.at + ')</small></span>' +
       '<span class="ms-need">' + (next.at - count) + ' more</span>' + meter(count - prev, next.at - prev);
   }
+  // If the rewards are also items in another collection ("claimedIn"), its ticks say which ones you have picked up.
+  const claimedCol = m.claimedIn ? findCollection(page.game, m.claimedIn) : null;
+  const claimed = claimedCol ? getCollected(page.game, claimedCol) : new Set();
   const box = $('milestones');
   const wasOpen = box.open;
   box.innerHTML = '<summary>' + head + '<span class="ms-all">' + esc(m.title) + '</span></summary>' +
     '<ol class="ms-list">' + m.list.map(function (r, i) {
       const done = count >= r.at;
-      return '<li class="' + (done ? 'done' : '') + (i === nextIndex ? ' next' : '') + '"><span class="ms-at">' + r.at + '</span>' +
-        '<span>' + esc(r.title) + ' <small>' + esc(r.detail) + '</small></span>' +
-        '<span class="ms-state">' + (done ? 'Unlocked' : (r.at - count) + ' to go') + '</span></li>';
+      const got = claimed.has(r.id);
+      // Collected: struck through. Unlocked but not collected yet: highlighted. Next to unlock: its own highlight.
+      const state = got ? 'claimed' : done ? (claimedCol ? 'ready' : 'done') : i === nextIndex ? 'next' : '';
+      const label = got ? 'Collected' : done ? (claimedCol ? 'Ready to collect' : 'Unlocked') : (r.at - count) + ' to go';
+      return '<li class="' + state + '"><span class="ms-at">' + r.at + '</span>' +
+        '<span class="ms-title">' + esc(r.title) + ' <small>' + esc(r.detail) + '</small></span>' +
+        '<span class="ms-state">' + label + '</span></li>';
     }).join('') + '</ol>';
   box.open = wasOpen;
 }
@@ -567,7 +617,8 @@ function route() {
 
   page = null;
   view.classList.remove('blur-contents');
-  if (col) showCollection(game, col);
+  // A collection that is still locked (e.g. the Colosseum before Chapter 4) shows the game page instead.
+  if (col && !isLocked(game, col)) showCollection(game, col);
   else if (game) showGame(game);
   else showHome();
 
