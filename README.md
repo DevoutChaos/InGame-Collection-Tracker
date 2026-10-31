@@ -86,3 +86,4 @@ When the app is next opened online, **"App updated. Tap to reload."** appears.
 | v1.1 | Final Fantasy VII Rebirth: Treasure, with Weapon / Materia / Item / Gil filters |
 | v1.2 | Chapters can be folded away by tapping their heading |
 | v1.3 | Final Fantasy Resonance: chest and Tablet Shard locations updated from the latest guides (31 Oct). Saved ticks carry over |
+| v1.3.1 | Minor corrections: Tablet Shards taken from the Tablet Shards page again (Dragon's Maw shard back in Chapter 8, fuller directions and notes) |
